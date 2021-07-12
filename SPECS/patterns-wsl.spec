@@ -46,8 +46,12 @@ Provides:       pattern-visible()
 
 Requires:       bash
 #Requires:       rubygems
-Recommends:     noto-sans-fonts
 Recommends:     adwaita-icon-theme
+Recommends:     fish
+Recommends:     gnome-icon-theme
+Recommends:     noto-sans-fonts
+Recommends:     powerline-fonts
+Recommends:     zsh
 #Suggests:       ruby-doc-html
 #Suggests:       ruby-doc-ri
 #Suggests:       ruby-examples

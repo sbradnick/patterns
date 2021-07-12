@@ -14,6 +14,11 @@ Build with:
 rpmbuild --target x86_64 -bb patterns-wsl.spec
 ````
 
+Install with:
+```
+sudo zypper in --recommends ~/rpmbuild/RPMS/x86_64/patterns-wsl-wsl-20210712-0.x86_64.rpm
+```
+
 Verify with:
 ```
 zypper search --type pattern wsl
