@@ -24,3 +24,12 @@ Verify with:
 zypper search --type pattern wsl
 zypper info --type pattern --recommends wsl
 ```
+
+Info on variables:
+```
+$ rpm --eval %{_sysconfdir}
+/etc
+
+$ rpm --eval %{buildroot}
+/home/scott/rpmbuild/BUILDROOT/%{NAME}-%{VERSION}-%{RELEASE}.x86_64
+```
