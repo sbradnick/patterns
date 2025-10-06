@@ -1,7 +1,7 @@
 #
 # spec file for package patterns-wsl
 #
-# Copyright (c) 2021 SUSE LLC
+# Copyright (c) 2024 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -15,65 +15,241 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
+
 Name:           patterns-wsl
-Version:        20210712
+Version:        20240327
 Release:        0
-Summary:        Patterns for Installation (Windows Subsystem for Linux, WSL)
+Summary:        Recommended packages for Windows Subsystem for Linux, WSL, WSLg
 License:        MIT
 Group:          Metapackages
-URL:            https://github.com/openSUSE/patterns
-Source0:        %{name}-rpmlintrc
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+URL:            https://github.com/sbradnick/patterns
 BuildRequires:  patterns-rpm-macros
+BuildRequires:  udev
+BuildRequires:  pkgconfig(systemd)
+BuildArch:      noarch
 
 %description
 This is an internal package that is used to create the patterns as part
 of the installation source setup.  Installation of this package does
 not make sense.
 
-This particular package contains the WSL pattern.
+# ----
 
-##########
-
-%package wsl
+%package base
 %pattern_development
-Summary:        WSL
+Summary:        Base WSL packages
 Group:          Metapackages
-Provides:       pattern() = wsl
-Provides:       pattern-icon() = pattern-wsl
-Provides:       pattern-order() = 3420
+Provides:       pattern() = wsl_base
+Provides:       pattern-icon() = pattern-generic
+#Provides:       pattern-order() = ?
 Provides:       pattern-visible()
-
 Requires:       bash
-#Requires:       rubygems
-Recommends:     adwaita-icon-theme
 Recommends:     fish
+Recommends:     zsh
+
+%description base
+This package contains the wsl_base pattern: recommended configs,tools,libraries for using WSL.
+
+%pre base
+if [[ -f %{_sysconfdir}/wsl.conf && ! -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_base] Creating backup for %{_sysconfdir}/wsl.conf.wsl_base ..."
+  cp -v %{_sysconfdir}/wsl.conf %{_sysconfdir}/wsl.conf.wsl_base
+  BOOT_COUNT=$(%{_bindir}/grep -c "\[boot\]" %{_sysconfdir}/wsl.conf.wsl_base)
+  if [[ $BOOT_COUNT -gt 0 ]];
+  then
+    COMMAND_COUNT=$(%{_bindir}/grep -c "^command" %{_sysconfdir}/wsl.conf.wsl_base)
+    if [[ $COMMAND_COUNT -gt 0 ]];
+    then
+      %{_bindir}/echo "* [wsl_base] Entry exists for 'command'; chaining in new item ..."
+      EXISTING_COMMAND=$(%{_bindir}/grep "^command" %{_sysconfdir}/wsl.conf.wsl_base | %{_bindir}/cut -d= -f2-)
+      %{_bindir}/sed -i /^command/d %{_sysconfdir}/wsl.conf.wsl_base
+      %{_bindir}/sed -i 's,\[boot\],\[boot\]\n# adjusted by wsl_base pattern\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\" ; '"$EXISTING_COMMAND"'\n# END: wsl_base pattern edit,g' %{_sysconfdir}/wsl.conf.wsl_base
+    fi
+  else
+    %{_bindir}/echo "* [wsl_base] File existed, but no [boot]; adjusting %{_sysconfdir}/wsl.conf.wsl_base ..."
+    %{_bindir}/echo -e "# added by wsl_base pattern\n[boot]\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\"\n# END: wsl_base pattern edit" >> %{_sysconfdir}/wsl.conf.wsl_base
+  fi
+elif [[ -f %{_sysconfdir}/wsl.conf && -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_base] Current %{_sysconfdir}/wsl.conf is a symlink ; ensure contents you want are copied to a non-symlink %{_sysconfdir}/wsl.conf and reinstall the pattern ..."
+else
+  %{_bindir}/echo "* [wsl_base] No file existed; adding %{_sysconfdir}/wsl.conf.wsl_base ..."
+  %{_bindir}/echo -e "# added by wsl_base pattern\n[boot]\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\"\n# END: wsl_base pattern edit" > %{_sysconfdir}/wsl.conf.wsl_base
+fi
+
+%post base
+if [[ -e %{_sysconfdir}/wsl.conf.wsl_base ]];
+then
+  ln -sf %{_sysconfdir}/wsl.conf.wsl_base %{_sysconfdir}/wsl.conf
+fi
+
+%files base
+%dir %{_docdir}/patterns
+%{_docdir}/patterns/wsl_base.txt
+
+# ----
+
+%package gui
+%pattern_development
+Summary:        WSL GUI packages
+Group:          Metapackages
+Provides:       pattern() = wsl_gui
+Provides:       pattern-icon() = pattern-generic
+#Provides:       pattern-order() = ?
+Provides:       pattern-visible()
+Requires:       lato-fonts
+Recommends:     adwaita-icon-theme
 Recommends:     gnome-icon-theme
 Recommends:     noto-sans-fonts
 Recommends:     powerline-fonts
-Recommends:     zsh
-#Suggests:       ruby-doc-html
-#Suggests:       ruby-doc-ri
-#Suggests:       ruby-examples
-#Suggests:       rubygem-mysql
-#Suggests:       rubygem-racc
-#Suggests:       rubygem-ruby-fcgi
-#Suggests:       ruby-test-suite
-#Suggests:       ruby-tk
+Recommends:     xeyes
 
-%description wsl
-Tools / libraries for using WSL.
+%description gui
+This package contains the wsl_gui pattern: recommended configs,tools,libraries for using WSLg.
 
-%files wsl
-%dir /usr/share/doc/packages/patterns
-/usr/share/doc/packages/patterns/wsl.txt
+%pre gui
+if [[ -f %{_sysconfdir}/wsl.conf && ! -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_gui] Creating backup for %{_sysconfdir}/wsl.conf.wsl_gui ..."
+  cp -v %{_sysconfdir}/wsl.conf %{_sysconfdir}/wsl.conf.wsl_gui
+  BOOT_COUNT=$(%{_bindir}/grep -c "\[boot\]" %{_sysconfdir}/wsl.conf.wsl_gui)
+  if [[ $BOOT_COUNT -gt 0 ]];
+  then
+    COMMAND_COUNT=$(%{_bindir}/grep -c "^command" %{_sysconfdir}/wsl.conf.wsl_gui)
+    if [[ $COMMAND_COUNT -gt 0 ]];
+    then
+      %{_bindir}/echo "* [wsl_gui] Entry exists for 'command'; chaining in new item ..."
+      EXISTING_COMMAND=$(%{_bindir}/grep "^command" %{_sysconfdir}/wsl.conf.wsl_gui | %{_bindir}/cut -d= -f2-)
+      %{_bindir}/sed -i /^command/d %{_sysconfdir}/wsl.conf.wsl_gui
+      %{_bindir}/sed -i 's,\[boot\],\[boot\]\n# adjusted by wsl_gui pattern\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\" ; '"$EXISTING_COMMAND"'\n# END: wsl_gui pattern edit,g' %{_sysconfdir}/wsl.conf.wsl_gui
+    fi
+  else
+    %{_bindir}/echo "* [wsl_gui] File existed, but no [boot]; adjusting %{_sysconfdir}/wsl.conf.wsl_gui ..."
+    %{_bindir}/echo -e "# added by wsl_gui pattern\n[boot]\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\"\n# END: wsl_gui pattern edit" >> %{_sysconfdir}/wsl.conf.wsl_gui
+  fi
+elif [[ -f %{_sysconfdir}/wsl.conf && -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_gui] Current %{_sysconfdir}/wsl.conf is a symlink ; ensure contents you want are copied to a non-symlink %{_sysconfdir}/wsl.conf and reinstall the pattern ..."
+else
+  %{_bindir}/echo "* [wsl_gui] No file existed; adding %{_sysconfdir}/wsl.conf.wsl_gui ..."
+  %{_bindir}/echo -e "# added by wsl_gui pattern\n[boot]\ncommand=/usr/sbin/sysctl -w net.ipv4.ping_group_range=\\\"0 2147483647\\\"\n# END: wsl_gui pattern edit" > %{_sysconfdir}/wsl.conf.wsl_gui
+fi
 
-################################################################################
+%post gui
+if [[ -e %{_sysconfdir}/wsl.conf.wsl_gui ]];
+then
+  ln -sf %{_sysconfdir}/wsl.conf.wsl_gui %{_sysconfdir}/wsl.conf
+fi
+
+%files gui
+%dir %{_docdir}/patterns
+%{_docdir}/patterns/wsl_gui.txt
+
+# ----
+
+%package systemd
+%pattern_development
+Summary:        WSL systemd setup
+Group:          Metapackages
+Provides:       pattern() = wsl_systemd
+Provides:       pattern-icon() = pattern-generic
+#Provides:       pattern-order() = ?
+Provides:       pattern-visible()
+Requires:       systemd
+Requires:       patterns-wsl-tmpfiles
+
+%description systemd
+This package contains the wsl_systemd pattern: adjusts or provides %{_sysconfdir}/wsl.conf and /sbin/init symlink where required.
+
+%pre systemd -p /bin/bash
+if [[ ! -L /sbin/init ]];
+then
+  %{_bindir}/echo "* [wsl_systemd] Adding /sbin/init -> /usr/lib/systemd/systemd symlink."
+  %{_bindir}/ln -s %{_systemd_util_dir}/systemd /sbin/init
+fi
+if [[ -f %{_sysconfdir}/wsl.conf && ! -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_systemd] Creating backup for %{_sysconfdir}/wsl.conf.wsl_systemd ..."
+  cp -v %{_sysconfdir}/wsl.conf %{_sysconfdir}/wsl.conf.wsl_systemd
+  BOOT_COUNT=$(%{_bindir}/grep -c "\[boot\]" %{_sysconfdir}/wsl.conf.wsl_systemd)
+  if [[ $BOOT_COUNT -gt 0 ]];
+  then
+    COMMAND_COUNT=$(%{_bindir}/grep -c "^command" %{_sysconfdir}/wsl.conf.wsl_systemd)
+    if [[ $COMMAND_COUNT -gt 0 ]];
+    then
+      %{_bindir}/echo "* [wsl_systemd] Entry exists for 'command'; looking for and removing ping_group_range (if found) ..."
+      CMDS_TO_KEEP=""
+      PREEXISTING_COMMANDS=$(%{_bindir}/grep ^command %{_sysconfdir}/wsl.conf.wsl_systemd | %{_bindir}/cut -d= -f2- | %{_bindir}/awk -F';' '{for (i=1; i<=NF; ++i) {print $i}}')
+      while read -r line
+      do
+        LINE_CHECK=$(%{_bindir}/echo $line | grep -v ping_group_range)
+        if [[ ! -z $LINE_CHECK ]];
+        then
+          if [[ -z $CMDS_TO_KEEP ]];
+          then
+            CMDS_TO_KEEP=$(%{_bindir}/echo "$LINE_CHECK")
+          else
+            CMDS_TO_KEEP=$(%{_bindir}/echo "$CMDS_TO_KEEP ; $LINE_CHECK")
+          fi
+        fi
+      done <<< "$PREEXISTING_COMMANDS"
+      %{_bindir}/sed -i 's,^command.*$,command='"$CMDS_TO_KEEP"',g' %{_sysconfdir}/wsl.conf.wsl_systemd
+    fi
+    %{_bindir}/echo "* [wsl_systemd] Adjusting %{_sysconfdir}/wsl.conf.wsl_systemd ..."
+    %{_bindir}/sed -i 's,\[boot\],\[boot\]\n# adjusted by wsl_systemd pattern\nsystemd=true\n# END: wsl_systemd pattern edit,g' %{_sysconfdir}/wsl.conf.wsl_systemd
+  else
+    %{_bindir}/echo "* [wsl_systemd] File existed, but no [boot]; adjusting %{_sysconfdir}/wsl.conf.wsl_systemd ..."
+    %{_bindir}/echo -e "# added by wsl_systemd pattern\n[boot]\nsystemd=true\n# END: wsl_systemd pattern edit" >> %{_sysconfdir}/wsl.conf.wsl_systemd
+  fi
+elif [[ -f %{_sysconfdir}/wsl.conf && -L %{_sysconfdir}/wsl.conf ]];
+then
+  %{_bindir}/echo "* [wsl_systemd] Current %{_sysconfdir}/wsl.conf is a symlink ; ensure contents you want are copied to a non-symlink %{_sysconfdir}/wsl.conf and reinstall the pattern ..."
+else
+  %{_bindir}/echo "* [wsl_systemd] No file existed; adding %{_sysconfdir}/wsl.conf.wsl_systemd ..."
+  %{_bindir}/echo -e "# added by wsl_systemd pattern\n[boot]\nsystemd=true\n# END: wsl_systemd pattern edit" > %{_sysconfdir}/wsl.conf.wsl_systemd
+fi
+
+%post systemd
+if [[ -e %{_sysconfdir}/wsl.conf.wsl_systemd ]];
+then
+  ln -sf %{_sysconfdir}/wsl.conf.wsl_systemd %{_sysconfdir}/wsl.conf
+fi
+
+%files systemd
+%dir %{_docdir}/patterns
+%{_docdir}/patterns/wsl_systemd.txt
+
+# ----
+
+%package tmpfiles
+Summary:  Setup WSLg tmpfiles.d configuration
+Source0:  wslg.conf
+
+%description tmpfiles
+The package installs %{_tmpfilesdir}/wslg.conf so the proper symlink to /mnt/wslg/.X11-unix exists at boot.
+
+%post tmpfiles
+%tmpfiles_create %{_tmpfilesdir}/wslg.conf
+
+%files tmpfiles
+%{_tmpfilesdir}/wslg.conf
+
+# ----
 
 %prep
 
 %build
 
 %install
-mkdir -p $RPM_BUILD_ROOT/usr/share/doc/packages/patterns/
-echo 'This file marks the pattern wsl to be installed.' > $RPM_BUILD_ROOT/usr/share/doc/packages/patterns/wsl.txt
+mkdir -p %{buildroot}%{_docdir}/patterns/
+echo 'This file marks the pattern wsl_base to be installed.' > %{buildroot}%{_docdir}/patterns/wsl_base.txt
+mkdir -p %{buildroot}%{_docdir}/patterns/
+echo 'This file marks the pattern wsl_gui to be installed.' > %{buildroot}%{_docdir}/patterns/wsl_gui.txt
+mkdir -p %{buildroot}%{_docdir}/patterns/
+echo 'This file marks the pattern wsl_systemd to be installed.' > %{buildroot}%{_docdir}/patterns/wsl_systemd.txt
+mkdir -vp %{buildroot}%{_tmpfilesdir}
+install -Dm644 %{SOURCE0} %{buildroot}%{_tmpfilesdir}/wslg.conf
+
+%changelog
+
