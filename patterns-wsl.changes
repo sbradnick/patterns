@@ -1,8 +1,13 @@
 -------------------------------------------------------------------
+Fri Oct 30 17:07:47 UTC 2026 - Scott Bradnick <scott.bradnick@suse.com>
+
+- Adding a systemd-detect-virt check for "wsl" so if the patterns-wsl packages
+  are installed in non-WSL environments they don't do anything.
+
+-------------------------------------------------------------------
 Thu Oct 29 19:24:08 UTC 2026 - Tomáš Chvátal <tomas.chvatal@gmail.com>
 
-- Specify pattern-order() for wsl_base, wsl_systemd and wsl_gui;
-  drop obsolete Group: tags.
+- Specify pattern-order() for wsl_base, wsl_systemd and wsl_gui
 
 -------------------------------------------------------------------
 Wed Mar 27 15:17:12 UTC 2024 - Scott Bradnick <scott.bradnick@suse.com>
