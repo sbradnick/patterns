@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 29 19:24:08 UTC 2026 - Tomáš Chvátal <tomas.chvatal@gmail.com>
+
+- Specify pattern-order() for wsl_base, wsl_systemd and wsl_gui;
+  drop obsolete Group: tags.
+
+-------------------------------------------------------------------
 Wed Mar 27 15:17:12 UTC 2024 - Scott Bradnick <scott.bradnick@suse.com>
 
 - Update to version 20240327

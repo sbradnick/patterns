@@ -1,7 +1,7 @@
 #
 # spec file for package patterns-wsl
 #
-# Copyright (c) 2024 SUSE LLC
+# Copyright (c) 2026 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,7 +17,7 @@
 
 
 Name:           patterns-wsl
-Version:        20240327
+Version:        20261030
 Release:        0
 Summary:        Recommended packages for Windows Subsystem for Linux, WSL, WSLg
 License:        MIT
@@ -41,7 +41,7 @@ Summary:        Base WSL packages
 Group:          Metapackages
 Provides:       pattern() = wsl_base
 Provides:       pattern-icon() = pattern-generic
-#Provides:       pattern-order() = ?
+Provides:       pattern-order() = 1130
 Provides:       pattern-visible()
 Requires:       bash
 Recommends:     fish
@@ -96,7 +96,7 @@ Summary:        WSL GUI packages
 Group:          Metapackages
 Provides:       pattern() = wsl_gui
 Provides:       pattern-icon() = pattern-generic
-#Provides:       pattern-order() = ?
+Provides:       pattern-order() = 1320
 Provides:       pattern-visible()
 Requires:       lato-fonts
 Recommends:     adwaita-icon-theme
@@ -154,7 +154,7 @@ Summary:        WSL systemd setup
 Group:          Metapackages
 Provides:       pattern() = wsl_systemd
 Provides:       pattern-icon() = pattern-generic
-#Provides:       pattern-order() = ?
+Provides:       pattern-order() = 1140
 Provides:       pattern-visible()
 Requires:       systemd
 Requires:       patterns-wsl-tmpfiles
